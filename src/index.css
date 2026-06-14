@@ -1,0 +1,77 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap");
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+  body {
+    font-family: "Inter", system-ui, sans-serif;
+    background-color: #f8fafc;
+    color: #042c53;
+    -webkit-font-smoothing: antialiased;
+  }
+  h1,
+  h2,
+  h3,
+  h4 {
+    letter-spacing: -0.02em;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply px-6 py-2.5 rounded-lg font-medium text-sm
+         transition-all duration-200 active:scale-95 cursor-pointer;
+    background-color: #0c447c;
+    color: #ffffff;
+  }
+  .btn-primary:hover {
+    background-color: #185fa5;
+  }
+  .btn-teal {
+    @apply px-6 py-2.5 rounded-lg font-medium text-sm
+         transition-all duration-200 active:scale-95 cursor-pointer;
+    background-color: #1d9e75;
+    color: #ffffff;
+  }
+  .btn-teal:hover {
+    opacity: 0.9;
+  }
+
+  .btn-outline {
+    @apply px-6 py-2.5 rounded-lg font-medium text-sm
+         transition-all duration-200 active:scale-95 cursor-pointer;
+    background-color: transparent;
+    color: #0c447c;
+    border: 1.5px solid #0c447c;
+  }
+  .btn-outline:hover {
+    background-color: #e6f1fb;
+  }
+  .card {
+    @apply bg-white border border-sky-light rounded-xl p-5;
+  }
+  .input-field {
+    @apply w-full border border-sky-light rounded-lg px-4 py-2.5 text-sm
+           text-midnight placeholder-slate focus:outline-none
+           focus:border-navy-light focus:ring-2 focus:ring-sky-light transition-all;
+  }
+  .badge-teal {
+    @apply text-xs font-medium px-2.5 py-0.5 rounded-full bg-teal-light text-teal-dark;
+  }
+  .badge-blue {
+    @apply text-xs font-medium px-2.5 py-0.5 rounded-full bg-sky-light text-navy;
+  }
+  .badge-amber {
+    @apply text-xs font-medium px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-800;
+  }
+  .badge-red {
+    @apply text-xs font-medium px-2.5 py-0.5 rounded-full bg-red-50 text-red-800;
+  }
+  .badge-gray {
+    @apply text-xs font-medium px-2.5 py-0.5 rounded-full bg-slate-light text-slate;
+  }
+}
