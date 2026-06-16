@@ -15,6 +15,9 @@ import {
   Activity,
   Eye,
   X,
+  FileText,
+  Download,
+  AlertCircle,
 } from "lucide-react";
 import { useAuthStore } from "../../store/authStore";
 import Logo from "../../components/shared/Logo";
@@ -84,6 +87,7 @@ function Sidebar({ active, onLogout, open, setOpen }) {
 function DoctorModal({ doctor, onClose, onAction }) {
   const [reason, setReason] = useState("");
   const [loading, setLoading] = useState(false);
+  const [viewDoc, setViewDoc] = useState(null);
 
   const handleAction = async (status) => {
     setLoading(true);
@@ -97,9 +101,9 @@ function DoctorModal({ doctor, onClose, onAction }) {
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="bg-white rounded-2xl w-full max-w-lg shadow-xl overflow-hidden"
+        className="bg-white rounded-2xl w-full max-w-lg shadow-xl overflow-hidden max-h-[90vh] flex flex-col"
       >
-        <div className="flex items-center justify-between p-6 border-b border-sky-light">
+        <div className="flex items-center justify-between p-6 border-b border-sky-light flex-shrink-0">
           <h2 className="text-lg font-bold text-midnight">
             Doctor application
           </h2>
@@ -111,13 +115,25 @@ function DoctorModal({ doctor, onClose, onAction }) {
           </button>
         </div>
 
-        <div className="p-6 space-y-4">
+        <div className="p-6 space-y-4 overflow-y-auto">
           <div className="flex items-center gap-4">
             <div
-              className="w-14 h-14 rounded-2xl flex items-center justify-center text-xl font-bold text-white flex-shrink-0"
-              style={{ background: "#0C447C" }}
+              className="w-14 h-14 rounded-2xl overflow-hidden flex-shrink-0 border border-sky-light"
+              style={{ background: "#E6F1FB" }}
             >
-              {doctor.user?.name?.charAt(0)}
+              {doctor.profilePicture ? (
+                <img
+                  src={doctor.profilePicture}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div
+                  className="w-full h-full flex items-center justify-center text-xl font-bold"
+                  style={{ color: "#0C447C" }}
+                >
+                  {doctor.user?.name?.charAt(0)}
+                </div>
+              )}
             </div>
             <div>
               <h3 className="font-bold text-midnight text-base">
@@ -135,6 +151,17 @@ function DoctorModal({ doctor, onClose, onAction }) {
               { label: "City", value: doctor.user?.city },
               { label: "Phone", value: doctor.user?.phone },
               { label: "Place", value: doctor.consultancyPlace },
+              {
+                label: "Hours",
+                value:
+                  doctor.startTime && doctor.endTime
+                    ? `${doctor.startTime} — ${doctor.endTime}`
+                    : "—",
+              },
+              {
+                label: "Available",
+                value: doctor.availableDays?.join(", ") || "—",
+              },
             ].map(({ label, value }) => (
               <div key={label} className="bg-cloud rounded-xl p-3">
                 <p className="text-xs text-slate mb-0.5">{label}</p>
@@ -143,6 +170,77 @@ function DoctorModal({ doctor, onClose, onAction }) {
                 </p>
               </div>
             ))}
+          </div>
+
+          {/* Documents */}
+          <div>
+            <p className="text-sm font-bold text-midnight mb-2">
+              Uploaded documents ({doctor.documents?.length || 0})
+            </p>
+            {!doctor.documents || doctor.documents.length === 0 ? (
+              <div
+                className="text-center py-6 rounded-xl border border-dashed"
+                style={{ borderColor: "#B5D4F4" }}
+              >
+                <FileText
+                  size={20}
+                  className="mx-auto mb-1 text-slate opacity-30"
+                />
+                <p className="text-xs text-slate">No documents uploaded</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {doctor.documents.map((doc, i) => (
+                  <div
+                    key={i}
+                    className="flex items-center gap-3 p-3 rounded-xl border border-sky-light"
+                  >
+                    <div
+                      className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                      style={{ background: "#E6F1FB" }}
+                    >
+                      <FileText size={14} style={{ color: "#0C447C" }} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-semibold text-midnight truncate">
+                        {doc.name}
+                      </p>
+                      <p className="text-xs text-slate">
+                        {doc.size
+                          ? `${(doc.size / 1024).toFixed(1)} KB · `
+                          : ""}
+                        {new Date(doc.uploadedAt).toLocaleDateString("en-PK", {
+                          day: "numeric",
+                          month: "short",
+                          year: "numeric",
+                        })}{" "}
+                        {new Date(doc.uploadedAt).toLocaleTimeString("en-PK", {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-1.5 flex-shrink-0">
+                      <button
+                        onClick={() => setViewDoc(doc)}
+                        className="flex items-center gap-1 text-xs font-medium px-2.5 py-1.5 rounded-lg"
+                        style={{ background: "#E6F1FB", color: "#0C447C" }}
+                      >
+                        <Eye size={12} /> View
+                      </button>
+                      <a
+                        href={doc.url}
+                        download={doc.name}
+                        className="flex items-center gap-1 text-xs font-medium px-2.5 py-1.5 rounded-lg"
+                        style={{ background: "#E1F5EE", color: "#085041" }}
+                      >
+                        <Download size={12} /> Save
+                      </a>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {doctor.status === "pending" && (
@@ -161,7 +259,7 @@ function DoctorModal({ doctor, onClose, onAction }) {
         </div>
 
         {doctor.status === "pending" && (
-          <div className="flex gap-3 p-6 pt-0">
+          <div className="flex gap-3 p-6 pt-0 flex-shrink-0">
             <button
               onClick={() => handleAction("rejected")}
               disabled={loading}
@@ -181,6 +279,68 @@ function DoctorModal({ doctor, onClose, onAction }) {
           </div>
         )}
       </motion.div>
+
+      <AnimatePresence>
+        {viewDoc && (
+          <div className="fixed inset-0 bg-black/70 z-60 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0 }}
+              className="bg-white rounded-2xl w-full max-w-xl shadow-xl overflow-hidden"
+            >
+              <div className="flex items-center justify-between px-5 py-4 border-b border-sky-light">
+                <p className="text-sm font-bold text-midnight">
+                  {viewDoc.name}
+                </p>
+                <div className="flex items-center gap-2">
+                  <a
+                    href={viewDoc.url}
+                    download={viewDoc.name}
+                    className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg"
+                    style={{ background: "#E1F5EE", color: "#085041" }}
+                  >
+                    <Download size={13} /> Download
+                  </a>
+                  <button
+                    onClick={() => setViewDoc(null)}
+                    className="p-2 rounded-xl hover:bg-cloud"
+                  >
+                    <X size={16} className="text-slate" />
+                  </button>
+                </div>
+              </div>
+              <div className="p-4 max-h-96 overflow-auto bg-cloud">
+                {viewDoc.name?.endsWith(".pdf") ? (
+                  <div className="text-center py-10">
+                    <FileText
+                      size={36}
+                      className="mx-auto mb-2 text-slate opacity-30"
+                    />
+                    <p className="text-sm text-slate mb-3">
+                      Download to view PDF
+                    </p>
+                    <a
+                      href={viewDoc.url}
+                      download={viewDoc.name}
+                      className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-white"
+                      style={{ background: "#0C447C" }}
+                    >
+                      <Download size={14} /> Download
+                    </a>
+                  </div>
+                ) : (
+                  <img
+                    src={viewDoc.url}
+                    alt={viewDoc.name}
+                    className="w-full rounded-xl object-contain"
+                  />
+                )}
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

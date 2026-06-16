@@ -64,8 +64,10 @@ export default function Register() {
     experience: "",
     fee: "",
     consultancyPlace: "",
+    availableDays: [],
     startTime: "",
     endTime: "",
+    profilePicture: "",
   });
 
   const handleChange = (e) => {
@@ -479,6 +481,53 @@ export default function Register() {
                   <>
                     <div>
                       <label className="block text-sm font-medium text-midnight mb-1.5">
+                        Profile picture
+                      </label>
+                      <div className="flex items-center gap-4">
+                        <div
+                          className="w-14 h-14 rounded-2xl flex-shrink-0 overflow-hidden border border-sky-light"
+                          style={{ background: "#E6F1FB" }}
+                        >
+                          {form.profilePicture ? (
+                            <img
+                              src={form.profilePicture}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-slate text-xs">
+                              Photo
+                            </div>
+                          )}
+                        </div>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          id="profile-pic-upload"
+                          onChange={(e) => {
+                            const file = e.target.files[0];
+                            if (!file) return;
+                            const reader = new FileReader();
+                            reader.onloadend = () =>
+                              setForm((f) => ({
+                                ...f,
+                                profilePicture: reader.result,
+                              }));
+                            reader.readAsDataURL(file);
+                          }}
+                        />
+                        <label
+                          htmlFor="profile-pic-upload"
+                          className="text-xs font-medium px-4 py-2 rounded-lg cursor-pointer transition-all"
+                          style={{ background: "#E6F1FB", color: "#0C447C" }}
+                        >
+                          Upload photo
+                        </label>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-midnight mb-1.5">
                         Specialization
                       </label>
                       <div className="relative">
@@ -574,15 +623,53 @@ export default function Register() {
                       </div>
                     </div>
 
+                    <div>
+                      <label className="block text-sm font-medium text-midnight mb-2">
+                        Available days
+                      </label>
+                      <div className="flex flex-wrap gap-2">
+                        {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map(
+                          (day) => (
+                            <button
+                              key={day}
+                              type="button"
+                              onClick={() => {
+                                const days = form.availableDays || [];
+                                const updated = days.includes(day)
+                                  ? days.filter((d) => d !== day)
+                                  : [...days, day];
+                                setForm((f) => ({
+                                  ...f,
+                                  availableDays: updated,
+                                }));
+                              }}
+                              className="text-xs px-3 py-1.5 rounded-lg font-medium transition-all"
+                              style={{
+                                background: (form.availableDays || []).includes(
+                                  day,
+                                )
+                                  ? "#0C447C"
+                                  : "#F8FAFC",
+                                color: (form.availableDays || []).includes(day)
+                                  ? "white"
+                                  : "#888780",
+                                border: `1px solid ${(form.availableDays || []).includes(day) ? "#0C447C" : "#E6F1FB"}`,
+                              }}
+                            >
+                              {day}
+                            </button>
+                          ),
+                        )}
+                      </div>
+                    </div>
+
                     <div className="bg-sky-light border border-sky rounded-xl p-4">
                       <p className="text-xs font-semibold text-navy mb-1">
                         Document verification
                       </p>
                       <p className="text-xs text-slate leading-relaxed">
                         After registration you will be asked to upload your
-                        medical license and credentials. Your account will be
-                        reviewed and approved by our admin team before going
-                        live.
+                        medical license and credentials from your profile page.
                       </p>
                     </div>
                   </>
