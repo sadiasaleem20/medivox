@@ -22,7 +22,6 @@ import {
   Edit,
 } from "lucide-react";
 import { useAuthStore } from "../../store/authStore";
-import DoctorSidebar from "../../components/shared/DoctorSidebar";
 import api from "../../lib/axios";
 import toast from "react-hot-toast";
 import { SPECIALIZATIONS } from "../../constants";
@@ -262,8 +261,9 @@ export default function DoctorProfile() {
 
   return (
     <div className="min-h-screen bg-cloud flex">
-      <DoctorSidebar
-        active={`/doctor/${id}/profile`}
+      <Sidebar
+        active="/doctor/profile"
+        onLogout={handleLogout}
         open={sidebarOpen}
         setOpen={setSidebarOpen}
       />

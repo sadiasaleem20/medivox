@@ -15,7 +15,6 @@ import {
   User,
 } from "lucide-react";
 import { useAuthStore } from "../../store/authStore";
-import DoctorSidebar from "../../components/shared/DoctorSidebar";
 import api from "../../lib/axios";
 
 const fadeUp = {
@@ -161,8 +160,9 @@ export default function DoctorDashboard() {
 
   return (
     <div className="min-h-screen bg-cloud flex">
-      <DoctorSidebar
-        active={`/doctor/${id}/dashboard`}
+      <Sidebar
+        active="/doctor/dashboard"
+        onLogout={handleLogout}
         open={sidebarOpen}
         setOpen={setSidebarOpen}
       />
