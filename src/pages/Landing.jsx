@@ -31,15 +31,6 @@ const stagger = {
   show: { transition: { staggerChildren: 0.12 } },
 };
 
-const [verifiedDoctors, setVerifiedDoctors] = useState([]);
-
-useEffect(() => {
-  fetch(`${import.meta.env.VITE_API_URL}/doctor`)
-    .then((res) => res.json())
-    .then((data) => setVerifiedDoctors(data.doctors?.slice(0, 3) || []))
-    .catch(() => setVerifiedDoctors([]));
-}, []);
-
 const DOCTORS = [
   {
     name: "Dr. Sara Malik",
@@ -290,6 +281,14 @@ function Navbar() {
 }
 
 export default function Landing() {
+  const [verifiedDoctors, setVerifiedDoctors] = useState([]);
+
+  useEffect(() => {
+    fetch(`${import.meta.env.VITE_API_URL}/doctor`)
+      .then((res) => res.json())
+      .then((data) => setVerifiedDoctors(data.doctors?.slice(0, 3) || []))
+      .catch(() => setVerifiedDoctors([]));
+  }, []);
   return (
     <div className="min-h-screen bg-cloud overflow-x-hidden">
       <Navbar />
