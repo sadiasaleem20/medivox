@@ -22,6 +22,8 @@ import { useAuthStore } from "../../store/authStore";
 import Logo from "../../components/shared/Logo";
 import api from "../../lib/axios";
 import toast from "react-hot-toast";
+import UserSidebar from "../../components/shared/UserSidebar";
+import { useParams } from "react-router-dom";
 
 function Sidebar({ active, onLogout, open, setOpen }) {
   const links = [
@@ -347,9 +349,8 @@ export default function MedicineScheduler() {
 
   return (
     <div className="min-h-screen bg-cloud flex">
-      <Sidebar
-        active="/medicines"
-        onLogout={handleLogout}
+      <UserSidebar
+        active={`/user/${user?._id}/dashboard`}
         open={sidebarOpen}
         setOpen={setSidebarOpen}
       />

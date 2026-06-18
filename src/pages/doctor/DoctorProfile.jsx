@@ -13,83 +13,21 @@ import {
   Save,
   LogOut,
   Menu,
-  Activity,
-  Calendar,
   CheckCircle,
   X,
   Download,
   Eye,
   Trash2,
   Plus,
+  Edit,
 } from "lucide-react";
 import { useAuthStore } from "../../store/authStore";
-import Logo from "../../components/shared/Logo";
+import DoctorSidebar from "../../components/shared/DoctorSidebar";
 import api from "../../lib/axios";
 import toast from "react-hot-toast";
 import { SPECIALIZATIONS } from "../../constants";
 
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-
-function Sidebar({ active, onLogout, open, setOpen }) {
-  const links = [
-    { to: "/doctor/dashboard", label: "Overview", icon: Activity },
-    { to: "/doctor/profile", label: "My Profile", icon: User },
-    { to: "/doctor/appointments", label: "Appointments", icon: Calendar },
-  ];
-  return (
-    <>
-      {open && (
-        <div
-          className="fixed inset-0 bg-black/40 z-20 lg:hidden"
-          onClick={() => setOpen(false)}
-        />
-      )}
-      <aside
-        className={`fixed top-0 left-0 h-full w-64 z-30 flex flex-col transition-transform duration-300
-                    ${open ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}`}
-        style={{ background: "#042C53" }}
-      >
-        <div className="p-6 border-b border-white/10">
-          <Logo size="md" />
-          <div
-            className="mt-3 px-2 py-1 rounded-lg text-xs font-medium inline-block"
-            style={{ background: "#E6F1FB", color: "#0C447C" }}
-          >
-            Doctor Portal
-          </div>
-        </div>
-        <nav className="flex-1 p-4 space-y-1">
-          {links.map(({ to, label, icon: Icon }) => (
-            <Link
-              key={to}
-              to={to}
-              onClick={() => setOpen(false)}
-              className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all"
-              style={{
-                background: active === to ? "#0C447C" : "transparent",
-                color: active === to ? "white" : "rgba(255,255,255,0.6)",
-              }}
-            >
-              <Icon size={18} />
-              {label}
-            </Link>
-          ))}
-        </nav>
-        <div className="p-4 border-t border-white/10">
-          <button
-            onClick={onLogout}
-            className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium
-                       w-full hover:bg-white/10 transition-all"
-            style={{ color: "rgba(255,255,255,0.6)" }}
-          >
-            <LogOut size={18} />
-            Sign out
-          </button>
-        </div>
-      </aside>
-    </>
-  );
-}
 
 function DocumentViewModal({ doc, onClose }) {
   const isPdf =
@@ -174,17 +112,16 @@ function DocumentViewModal({ doc, onClose }) {
 }
 
 export default function DoctorProfile() {
-  const { user, logout } = useAuthStore();
+  const { user } = useAuthStore();
   const navigate = useNavigate();
-  const fileRef = useRef();
   const docFileRef = useRef();
   const picRef = useRef();
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [doctor, setDoctor] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [uploading, setUploading] = useState(false);
   const [docUploading, setDocUploading] = useState(false);
   const [viewDoc, setViewDoc] = useState(null);
 
@@ -198,6 +135,8 @@ export default function DoctorProfile() {
     availableDays: [],
     about: "",
   });
+
+  const id = user?._id;
 
   useEffect(() => {
     api
@@ -224,6 +163,7 @@ export default function DoctorProfile() {
     setForm((p) => ({ ...p, [e.target.name]: e.target.value }));
 
   const toggleDay = (day) => {
+    if (!editing) return;
     setForm((p) => ({
       ...p,
       availableDays: p.availableDays.includes(day)
@@ -238,11 +178,28 @@ export default function DoctorProfile() {
       const res = await api.put("/doctor/me", form);
       setDoctor(res.data.doctor);
       toast.success("Profile updated");
+      setEditing(false);
     } catch {
       toast.error("Failed to update profile");
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleCancel = () => {
+    if (doctor) {
+      setForm({
+        specialization: doctor.specialization || "",
+        experience: doctor.experience || "",
+        fee: doctor.fee || "",
+        consultancyPlace: doctor.consultancyPlace || "",
+        startTime: doctor.startTime || "",
+        endTime: doctor.endTime || "",
+        availableDays: doctor.availableDays || [],
+        about: doctor.about || "",
+      });
+    }
+    setEditing(false);
   };
 
   const handleProfilePic = (file) => {
@@ -300,16 +257,13 @@ export default function DoctorProfile() {
     }
   };
 
-  const handleLogout = () => {
-    logout();
-    navigate("/login");
-  };
+  const inputClass = (extra = "") =>
+    `input-field text-sm ${!editing ? "bg-cloud cursor-not-allowed opacity-70" : ""} ${extra}`;
 
   return (
     <div className="min-h-screen bg-cloud flex">
-      <Sidebar
-        active="/doctor/profile"
-        onLogout={handleLogout}
+      <DoctorSidebar
+        active={`/doctor/${id}/profile`}
         open={sidebarOpen}
         setOpen={setSidebarOpen}
       />
@@ -337,39 +291,60 @@ export default function DoctorProfile() {
               Update your information and documents
             </p>
           </div>
-          <button
-            onClick={handleSave}
-            disabled={saving}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold
-                       text-white transition-all active:scale-95 disabled:opacity-60"
-            style={{ background: "#1D9E75" }}
-          >
-            {saving ? (
-              <svg
-                className="animate-spin w-4 h-4"
-                viewBox="0 0 24 24"
-                fill="none"
+
+          {editing ? (
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleCancel}
+                className="px-4 py-2.5 rounded-xl text-sm font-semibold transition-all border"
+                style={{ borderColor: "#E6F1FB", color: "#888780" }}
               >
-                <circle
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="white"
-                  strokeWidth="3"
-                  strokeOpacity="0.3"
-                />
-                <path
-                  d="M12 2a10 10 0 0 1 10 10"
-                  stroke="white"
-                  strokeWidth="3"
-                  strokeLinecap="round"
-                />
-              </svg>
-            ) : (
-              <Save size={16} />
-            )}
-            {saving ? "Saving..." : "Save changes"}
-          </button>
+                Cancel
+              </button>
+              <button
+                onClick={handleSave}
+                disabled={saving}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold
+                           text-white transition-all active:scale-95 disabled:opacity-60"
+                style={{ background: "#1D9E75" }}
+              >
+                {saving ? (
+                  <svg
+                    className="animate-spin w-4 h-4"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                  >
+                    <circle
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="white"
+                      strokeWidth="3"
+                      strokeOpacity="0.3"
+                    />
+                    <path
+                      d="M12 2a10 10 0 0 1 10 10"
+                      stroke="white"
+                      strokeWidth="3"
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                ) : (
+                  <Save size={16} />
+                )}
+                {saving ? "Saving..." : "Save changes"}
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => setEditing(true)}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold
+                         text-white transition-all active:scale-95"
+              style={{ background: "#0C447C" }}
+            >
+              <Edit size={16} /> Edit profile
+            </button>
+          )}
         </header>
 
         <main className="flex-1 p-6">
@@ -381,7 +356,7 @@ export default function DoctorProfile() {
             <div className="grid lg:grid-cols-2 gap-6">
               {/* Left column */}
               <div className="space-y-5">
-                {/* Profile picture + name */}
+                {/* Profile picture */}
                 <div className="card">
                   <h2 className="text-base font-bold text-midnight mb-4">
                     Profile picture
@@ -423,7 +398,7 @@ export default function DoctorProfile() {
                       />
                       <button
                         onClick={() => picRef.current?.click()}
-                        className="flex items-center gap-2 text-xs font-semibold px-4 py-2 rounded-lg"
+                        className="flex items-center gap-2 text-xs font-semibold px-4 py-2 rounded-lg transition-all"
                         style={{ background: "#E6F1FB", color: "#0C447C" }}
                       >
                         <Upload size={13} />
@@ -488,7 +463,8 @@ export default function DoctorProfile() {
                         name="specialization"
                         value={form.specialization}
                         onChange={handleChange}
-                        className="input-field pl-10 text-sm"
+                        disabled={!editing}
+                        className={inputClass("pl-10")}
                       >
                         <option value="">Select specialization</option>
                         {SPECIALIZATIONS.map((s) => (
@@ -510,8 +486,9 @@ export default function DoctorProfile() {
                         type="number"
                         value={form.experience}
                         onChange={handleChange}
+                        disabled={!editing}
                         placeholder="e.g. 8"
-                        className="input-field text-sm"
+                        className={inputClass()}
                       />
                     </div>
                     <div>
@@ -528,8 +505,9 @@ export default function DoctorProfile() {
                           type="number"
                           value={form.fee}
                           onChange={handleChange}
+                          disabled={!editing}
                           placeholder="e.g. 2000"
-                          className="input-field pl-10 text-sm"
+                          className={inputClass("pl-10")}
                         />
                       </div>
                     </div>
@@ -543,14 +521,15 @@ export default function DoctorProfile() {
                       name="about"
                       value={form.about}
                       onChange={handleChange}
-                      placeholder="Brief description about your practice and expertise..."
+                      disabled={!editing}
+                      placeholder="Brief description about your practice..."
                       rows={3}
-                      className="input-field text-sm resize-none"
+                      className={inputClass("resize-none")}
                     />
                   </div>
                 </div>
 
-                {/* Documents section */}
+                {/* Documents */}
                 <div className="card space-y-4">
                   <div className="flex items-center justify-between">
                     <div>
@@ -558,7 +537,7 @@ export default function DoctorProfile() {
                         Uploaded documents
                       </h2>
                       <p className="text-xs text-slate mt-0.5">
-                        License, degree, and other credentials
+                        License, degree, and credentials
                       </p>
                     </div>
                     <div>
@@ -624,7 +603,8 @@ export default function DoctorProfile() {
                           key={doc._id || i}
                           initial={{ opacity: 0, y: 6 }}
                           animate={{ opacity: 1, y: 0 }}
-                          className="flex items-center gap-3 p-3 rounded-xl border border-sky-light hover:bg-cloud transition-colors"
+                          className="flex items-center gap-3 p-3 rounded-xl border border-sky-light
+                                     hover:bg-cloud transition-colors"
                         >
                           <div
                             className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
@@ -661,7 +641,7 @@ export default function DoctorProfile() {
                           <div className="flex items-center gap-1.5 flex-shrink-0">
                             <button
                               onClick={() => setViewDoc(doc)}
-                              className="flex items-center gap-1 text-xs font-medium px-2.5 py-1.5 rounded-lg transition-all"
+                              className="flex items-center gap-1 text-xs font-medium px-2.5 py-1.5 rounded-lg"
                               style={{
                                 background: "#E6F1FB",
                                 color: "#0C447C",
@@ -672,7 +652,7 @@ export default function DoctorProfile() {
                             <a
                               href={doc.url}
                               download={doc.name}
-                              className="flex items-center gap-1 text-xs font-medium px-2.5 py-1.5 rounded-lg transition-all"
+                              className="flex items-center gap-1 text-xs font-medium px-2.5 py-1.5 rounded-lg"
                               style={{
                                 background: "#E1F5EE",
                                 color: "#085041",
@@ -715,8 +695,9 @@ export default function DoctorProfile() {
                         name="consultancyPlace"
                         value={form.consultancyPlace}
                         onChange={handleChange}
+                        disabled={!editing}
                         placeholder="e.g. Shaukat Khanum Hospital, Lahore"
-                        className="input-field pl-10 text-sm"
+                        className={inputClass("pl-10")}
                       />
                     </div>
                   </div>
@@ -736,7 +717,8 @@ export default function DoctorProfile() {
                           type="time"
                           value={form.startTime}
                           onChange={handleChange}
-                          className="input-field pl-10 text-sm"
+                          disabled={!editing}
+                          className={inputClass("pl-10")}
                         />
                       </div>
                     </div>
@@ -754,7 +736,8 @@ export default function DoctorProfile() {
                           type="time"
                           value={form.endTime}
                           onChange={handleChange}
-                          className="input-field pl-10 text-sm"
+                          disabled={!editing}
+                          className={inputClass("pl-10")}
                         />
                       </div>
                     </div>
@@ -779,12 +762,19 @@ export default function DoctorProfile() {
                               ? "white"
                               : "#888780",
                             border: `1px solid ${form.availableDays.includes(day) ? "#0C447C" : "#E6F1FB"}`,
+                            opacity: !editing ? 0.7 : 1,
+                            cursor: !editing ? "not-allowed" : "pointer",
                           }}
                         >
                           {day}
                         </button>
                       ))}
                     </div>
+                    {!editing && (
+                      <p className="text-xs text-slate mt-2">
+                        Click Edit profile to change available days
+                      </p>
+                    )}
                   </div>
                 </div>
 
@@ -819,6 +809,23 @@ export default function DoctorProfile() {
                     </div>
                   </div>
                 </div>
+
+                {/* Tips when pending */}
+                {doctor?.status === "pending" && (
+                  <div
+                    className="card"
+                    style={{ borderLeft: "4px solid #1D9E75" }}
+                  >
+                    <p className="text-sm font-semibold text-midnight mb-1">
+                      While you wait
+                    </p>
+                    <p className="text-xs text-slate leading-relaxed">
+                      Make sure your profile is complete and your license
+                      document is uploaded clearly. Our admin team will review
+                      your application and notify you once approved.
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
           )}

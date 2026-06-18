@@ -3,20 +3,19 @@ import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   Calendar,
-  User,
   Clock,
   LogOut,
   Menu,
   Activity,
   ChevronRight,
-  Bell,
   Shield,
   AlertCircle,
   CheckCircle,
   FileText,
+  User,
 } from "lucide-react";
 import { useAuthStore } from "../../store/authStore";
-import Logo from "../../components/shared/Logo";
+import DoctorSidebar from "../../components/shared/DoctorSidebar";
 import api from "../../lib/axios";
 
 const fadeUp = {
@@ -29,67 +28,7 @@ const stagger = {
   show: { transition: { staggerChildren: 0.08 } },
 };
 
-function Sidebar({ active, onLogout, open, setOpen }) {
-  const links = [
-    { to: "/doctor/dashboard", label: "Overview", icon: Activity },
-    { to: "/doctor/profile", label: "My Profile", icon: User },
-    { to: "/doctor/appointments", label: "Appointments", icon: Calendar },
-  ];
-  return (
-    <>
-      {open && (
-        <div
-          className="fixed inset-0 bg-black/40 z-20 lg:hidden"
-          onClick={() => setOpen(false)}
-        />
-      )}
-      <aside
-        className={`fixed top-0 left-0 h-full w-64 z-30 flex flex-col transition-transform duration-300
-                        ${open ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}`}
-        style={{ background: "#042C53" }}
-      >
-        <div className="p-6 border-b border-white/10">
-          <Logo size="md" />
-          <div
-            className="mt-3 px-2 py-1 rounded-lg text-xs font-medium inline-block"
-            style={{ background: "#E6F1FB", color: "#0C447C" }}
-          >
-            Doctor Portal
-          </div>
-        </div>
-        <nav className="flex-1 p-4 space-y-1">
-          {links.map(({ to, label, icon: Icon }) => (
-            <Link
-              key={to}
-              to={to}
-              onClick={() => setOpen(false)}
-              className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all"
-              style={{
-                background: active === to ? "#0C447C" : "transparent",
-                color: active === to ? "white" : "rgba(255,255,255,0.6)",
-              }}
-            >
-              <Icon size={18} />
-              {label}
-            </Link>
-          ))}
-        </nav>
-        <div className="p-4 border-t border-white/10">
-          <button
-            onClick={onLogout}
-            className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium w-full hover:bg-white/10 transition-all"
-            style={{ color: "rgba(255,255,255,0.6)" }}
-          >
-            <LogOut size={18} />
-            Sign out
-          </button>
-        </div>
-      </aside>
-    </>
-  );
-}
-
-function StatusBanner({ status, rejectionReason }) {
+function StatusBanner({ status, rejectionReason, userId }) {
   if (status === "approved")
     return (
       <motion.div
@@ -137,7 +76,7 @@ function StatusBanner({ status, rejectionReason }) {
             </p>
           )}
           <Link
-            to="/doctor/profile"
+            to={`/doctor/${userId}/profile`}
             className="inline-flex items-center gap-1 text-sm font-semibold mt-2"
             style={{ color: "#A32D2D" }}
           >
@@ -173,7 +112,7 @@ function StatusBanner({ status, rejectionReason }) {
 }
 
 export default function DoctorDashboard() {
-  const { user, logout } = useAuthStore();
+  const { user } = useAuthStore();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [doctor, setDoctor] = useState(null);
@@ -187,10 +126,7 @@ export default function DoctorDashboard() {
       .finally(() => setLoading(false));
   }, []);
 
-  const handleLogout = () => {
-    logout();
-    navigate("/login");
-  };
+  const id = user?._id;
 
   const STATS = [
     {
@@ -225,15 +161,17 @@ export default function DoctorDashboard() {
 
   return (
     <div className="min-h-screen bg-cloud flex">
-      <Sidebar
-        active="/doctor/dashboard"
-        onLogout={handleLogout}
+      <DoctorSidebar
+        active={`/doctor/${id}/dashboard`}
         open={sidebarOpen}
         setOpen={setSidebarOpen}
       />
 
       <div className="flex-1 lg:ml-64 flex flex-col">
-        <header className="bg-white border-b border-sky-light px-6 py-4 flex items-center justify-between sticky top-0 z-10">
+        <header
+          className="bg-white border-b border-sky-light px-6 py-4
+                           flex items-center justify-between sticky top-0 z-10"
+        >
           <div className="flex items-center gap-4">
             <button
               onClick={() => setSidebarOpen(true)}
@@ -243,16 +181,30 @@ export default function DoctorDashboard() {
             </button>
             <div>
               <h1 className="text-lg font-bold text-midnight">
-                Welcome, {user?.name?.split(" ")[0]}
+                Welcome, Dr. {user?.name?.split(" ")[0]}
               </h1>
               <p className="text-xs text-slate">Doctor portal</p>
             </div>
           </div>
+
           <div
-            className="w-9 h-9 rounded-xl flex items-center justify-center text-sm font-bold text-white"
+            className="w-10 h-10 rounded-xl overflow-hidden flex-shrink-0 border border-sky-light"
             style={{ background: "#0C447C" }}
           >
-            {user?.name?.charAt(0)}
+            {doctor?.profilePicture ? (
+              <img
+                src={doctor.profilePicture}
+                className="w-full h-full object-cover"
+                alt="Profile"
+              />
+            ) : (
+              <div
+                className="w-full h-full flex items-center justify-center
+                              text-sm font-bold text-white"
+              >
+                {user?.name?.charAt(0)}
+              </div>
+            )}
           </div>
         </header>
 
@@ -271,6 +223,7 @@ export default function DoctorDashboard() {
               <StatusBanner
                 status={doctor?.status}
                 rejectionReason={doctor?.rejectionReason}
+                userId={id}
               />
 
               {/* Stats */}
@@ -301,8 +254,8 @@ export default function DoctorDashboard() {
                     Profile summary
                   </h2>
                   <Link
-                    to="/doctor/profile"
-                    className="flex items-center gap-1 text-xs font-medium px-3 py-1.5 rounded-lg transition-all"
+                    to={`/doctor/${id}/profile`}
+                    className="flex items-center gap-1 text-xs font-medium px-3 py-1.5 rounded-lg"
                     style={{ background: "#E6F1FB", color: "#0C447C" }}
                   >
                     Edit profile <ChevronRight size={13} />
@@ -328,9 +281,16 @@ export default function DoctorDashboard() {
                           : "—",
                     },
                     {
+                      label: "Available days",
+                      value: doctor?.availableDays?.length
+                        ? doctor.availableDays.join(", ")
+                        : "—",
+                    },
+                    {
                       label: "Consultation fee",
                       value: `Rs. ${doctor?.fee || 0}`,
                     },
+                    { label: "About", value: doctor?.about || "—" },
                   ].map(({ label, value }) => (
                     <div key={label} className="flex flex-col gap-0.5">
                       <p className="text-xs text-slate">{label}</p>
@@ -348,7 +308,7 @@ export default function DoctorDashboard() {
                 className="grid sm:grid-cols-2 gap-4"
               >
                 <Link
-                  to="/doctor/profile"
+                  to={`/doctor/${id}/profile`}
                   className="card hover:shadow-md hover:-translate-y-1 transition-all flex items-center gap-4"
                 >
                   <div
@@ -369,7 +329,7 @@ export default function DoctorDashboard() {
                 </Link>
 
                 <Link
-                  to="/doctor/appointments"
+                  to={`/doctor/${id}/appointments`}
                   className="card hover:shadow-md hover:-translate-y-1 transition-all flex items-center gap-4"
                 >
                   <div

@@ -21,6 +21,8 @@ import { useAuthStore } from "../../store/authStore";
 import Logo from "../../components/shared/Logo";
 import api from "../../lib/axios";
 import { SPECIALIZATIONS, CITIES } from "../../constants";
+import UserSidebar from "../../components/shared/UserSidebar";
+import { useParams } from "react-router-dom";
 
 function Sidebar({ active, onLogout, open, setOpen }) {
   const links = [
@@ -202,9 +204,8 @@ export default function DoctorMatch() {
 
   return (
     <div className="min-h-screen bg-cloud flex">
-      <Sidebar
-        active="/doctors"
-        onLogout={handleLogout}
+      <UserSidebar
+        active={`/user/${user?._id}/dashboard`}
         open={sidebarOpen}
         setOpen={setSidebarOpen}
       />

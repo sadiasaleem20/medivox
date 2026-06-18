@@ -11,6 +11,7 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { useAuthStore } from "../../store/authStore";
+import DoctorSidebar from "../../components/shared/DoctorSidebar";
 import Logo from "../../components/shared/Logo";
 
 function Sidebar({ active, onLogout, open, setOpen }) {
@@ -84,9 +85,8 @@ export default function Appointments() {
 
   return (
     <div className="min-h-screen bg-cloud flex">
-      <Sidebar
-        active="/doctor/appointments"
-        onLogout={handleLogout}
+      <DoctorSidebar
+        active={`/doctor/${id}/dashboard`}
         open={sidebarOpen}
         setOpen={setSidebarOpen}
       />

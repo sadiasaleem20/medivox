@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
+import { useAuthStore } from "../store/authStore";
 import {
   Mic,
   Brain,
@@ -29,6 +30,15 @@ const stagger = {
   hidden: {},
   show: { transition: { staggerChildren: 0.12 } },
 };
+
+const [verifiedDoctors, setVerifiedDoctors] = useState([]);
+
+useEffect(() => {
+  fetch(`${import.meta.env.VITE_API_URL}/doctor`)
+    .then((res) => res.json())
+    .then((data) => setVerifiedDoctors(data.doctors?.slice(0, 3) || []))
+    .catch(() => setVerifiedDoctors([]));
+}, []);
 
 const DOCTORS = [
   {
@@ -166,6 +176,15 @@ function PulseWave() {
 
 function Navbar() {
   const [scrolled, setScrolled] = useState(false);
+  const [specOpen, setSpecOpen] = useState(false);
+  const { user, token } = useAuthStore();
+
+  const getDashboardLink = () => {
+    if (!user) return "/login";
+    if (user.role === "admin") return "/admin";
+    if (user.role === "doctor") return `/doctor/${user._id}/dashboard`;
+    return `/user/${user._id}/dashboard`;
+  };
 
   useEffect(() => {
     const fn = () => setScrolled(window.scrollY > 20);
@@ -186,6 +205,7 @@ function Navbar() {
     >
       <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
         <Logo size="md" />
+
         <div className="hidden md:flex items-center gap-8 text-sm font-medium text-midnight/70">
           <a href="#features" className="hover:text-navy transition-colors">
             Features
@@ -193,20 +213,76 @@ function Navbar() {
           <a href="#how" className="hover:text-navy transition-colors">
             How it works
           </a>
-          <a href="#doctors" className="hover:text-navy transition-colors">
-            Doctors
-          </a>
-        </div>
-        <div className="flex items-center gap-3">
-          <Link
-            to="/login"
-            className="text-sm font-medium text-navy hover:text-navy-light transition-colors px-4 py-2"
+
+          {/* Doctors dropdown */}
+          <div
+            className="relative"
+            onMouseEnter={() => setSpecOpen(true)}
+            onMouseLeave={() => setSpecOpen(false)}
           >
-            Sign in
-          </Link>
-          <Link to="/register" className="btn-primary text-sm">
-            Get started
-          </Link>
+            <button className="flex items-center gap-1 hover:text-navy transition-colors">
+              Doctors
+              <ChevronDown
+                size={14}
+                className={`transition-transform ${specOpen ? "rotate-180" : ""}`}
+              />
+            </button>
+
+            {specOpen && (
+              <motion.div
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-56 bg-white
+                           rounded-2xl shadow-xl border border-sky-light p-2 z-50"
+              >
+                <div className="max-h-72 overflow-y-auto">
+                  {SPECIALIZATIONS.map((spec) => (
+                    <Link
+                      key={spec}
+                      to={
+                        token && user?.role === "user"
+                          ? `/user/${user._id}/doctors?specialization=${encodeURIComponent(spec)}`
+                          : `/register`
+                      }
+                      className="block px-3 py-2 rounded-xl text-sm text-midnight
+                                 hover:bg-sky-light transition-colors"
+                      onClick={() => setSpecOpen(false)}
+                    >
+                      {spec}
+                    </Link>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3">
+          {token && user ? (
+            <Link
+              to={getDashboardLink()}
+              className="text-sm font-semibold px-5 py-2.5 rounded-lg text-white transition-all"
+              style={{ background: "#0C447C" }}
+            >
+              Dashboard
+            </Link>
+          ) : (
+            <>
+              <Link
+                to="/login"
+                className="text-sm font-medium text-navy hover:text-navy-light transition-colors px-4 py-2"
+              >
+                Sign in
+              </Link>
+              <Link
+                to="/register"
+                className="text-sm font-semibold px-5 py-2.5 rounded-lg text-white transition-all"
+                style={{ background: "#0C447C" }}
+              >
+                Get started
+              </Link>
+            </>
+          )}
         </div>
       </div>
     </motion.nav>
@@ -641,65 +717,106 @@ export default function Landing() {
             viewport={{ once: true }}
             className="grid md:grid-cols-3 gap-6"
           >
-            {DOCTORS.map((doc) => (
-              <motion.div
-                key={doc.name}
-                variants={fadeUp}
-                className="card hover:shadow-lg hover:-translate-y-1 transition-all duration-300"
-              >
-                <div className="flex items-center gap-4 mb-4">
-                  <img
-                    src={doc.img}
-                    className="w-16 h-16 rounded-2xl object-cover flex-shrink-0"
-                  />
-                  <div>
-                    <h3 className="font-semibold text-midnight text-base">
-                      {doc.name}
-                    </h3>
-                    <p className="text-sm text-slate">{doc.field}</p>
-                    <div className="flex items-center gap-1 mt-1">
-                      <Star
-                        size={12}
-                        className="fill-amber-400 text-amber-400"
-                      />
-                      <span className="text-xs font-semibold text-midnight">
-                        {doc.rating}
-                      </span>
-                      <span className="text-xs text-slate">
-                        ({doc.reviews} reviews)
-                      </span>
+            {(verifiedDoctors.length > 0 ? verifiedDoctors : DOCTORS).map(
+              (doc) => {
+                const isReal = !!doc.user;
+                const name = isReal ? doc.user?.name : doc.name;
+                const field = isReal ? doc.specialization : doc.field;
+                const city = isReal ? doc.user?.city : doc.city;
+                const exp = isReal ? `${doc.experience} yrs` : doc.exp;
+                const fee = isReal ? `Rs. ${doc.fee}` : doc.fee;
+                const rating = doc.rating || 4.8;
+                const reviews = doc.reviews || 0;
+                const avail = doc.startTime
+                  ? `${doc.startTime} — ${doc.endTime}`
+                  : "Available today";
+                const pic = isReal ? doc.profilePicture : doc.img;
+
+                return (
+                  <motion.div
+                    key={doc._id || doc.name}
+                    variants={fadeUp}
+                    className="card hover:shadow-lg hover:-translate-y-1 transition-all duration-300"
+                  >
+                    <div className="flex items-center gap-4 mb-4">
+                      <div
+                        className="w-16 h-16 rounded-2xl overflow-hidden flex-shrink-0 border border-sky-light"
+                        style={{ background: "#E6F1FB" }}
+                      >
+                        {pic ? (
+                          <img
+                            src={pic}
+                            className="w-full h-full object-cover"
+                            alt={name}
+                          />
+                        ) : (
+                          <div
+                            className="w-full h-full flex items-center justify-center text-2xl font-bold"
+                            style={{ color: "#0C447C" }}
+                          >
+                            {name?.charAt(0)}
+                          </div>
+                        )}
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-midnight text-base">
+                          {name}
+                        </h3>
+                        <p className="text-sm text-slate">{field}</p>
+                        <div className="flex items-center gap-1 mt-1">
+                          {[1, 2, 3, 4, 5].map((s) => (
+                            <Star
+                              key={s}
+                              size={13}
+                              className="fill-amber-400 text-amber-400"
+                            />
+                          ))}
+                          <span className="text-sm font-semibold text-midnight ml-1">
+                            {rating}
+                          </span>
+                          {reviews > 0 && (
+                            <span className="text-xs text-slate">
+                              ({reviews})
+                            </span>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </div>
 
-                <div className="flex flex-wrap gap-2 mb-4">
-                  <span className="badge-teal">Verified</span>
-                  <span className="badge-blue">{doc.avail}</span>
-                </div>
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      <span className="badge-teal">Verified</span>
+                      <span className="badge-blue">{avail}</span>
+                    </div>
 
-                <div className="grid grid-cols-3 gap-3 py-4 border-t border-b border-sky-light mb-4">
-                  <div className="text-center">
-                    <MapPin size={13} className="text-slate mx-auto mb-1" />
-                    <p className="text-xs text-slate">{doc.city}</p>
-                  </div>
-                  <div className="text-center">
-                    <Clock size={13} className="text-slate mx-auto mb-1" />
-                    <p className="text-xs text-slate">{doc.exp}</p>
-                  </div>
-                  <div className="text-center">
-                    <DollarSign size={13} className="text-slate mx-auto mb-1" />
-                    <p className="text-xs text-slate">{doc.fee}</p>
-                  </div>
-                </div>
+                    <div className="grid grid-cols-3 gap-3 py-4 border-t border-b border-sky-light mb-4">
+                      <div className="text-center">
+                        <MapPin size={13} className="text-slate mx-auto mb-1" />
+                        <p className="text-xs text-slate">{city}</p>
+                      </div>
+                      <div className="text-center">
+                        <Clock size={13} className="text-slate mx-auto mb-1" />
+                        <p className="text-xs text-slate">{exp}</p>
+                      </div>
+                      <div className="text-center">
+                        <DollarSign
+                          size={13}
+                          className="text-slate mx-auto mb-1"
+                        />
+                        <p className="text-xs text-slate">{fee}</p>
+                      </div>
+                    </div>
 
-                <Link
-                  to="/register"
-                  className="w-full btn-primary text-center block text-sm"
-                >
-                  Book appointment
-                </Link>
-              </motion.div>
-            ))}
+                    <Link
+                      to="/register"
+                      className="w-full py-2.5 rounded-xl text-sm font-semibold text-white text-center block transition-all"
+                      style={{ background: "#0C447C" }}
+                    >
+                      Book appointment
+                    </Link>
+                  </motion.div>
+                );
+              },
+            )}
           </motion.div>
         </div>
       </section>

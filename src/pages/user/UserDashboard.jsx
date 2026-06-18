@@ -18,6 +18,8 @@ import {
 import { useAuthStore } from "../../store/authStore";
 import Logo from "../../components/shared/Logo";
 import api from "../../lib/axios";
+import UserSidebar from "../../components/shared/UserSidebar";
+import { useParams } from "react-router-dom";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -156,9 +158,8 @@ export default function UserDashboard() {
 
   return (
     <div className="min-h-screen bg-cloud flex">
-      <Sidebar
-        active="/dashboard"
-        onLogout={handleLogout}
+      <UserSidebar
+        active={`/user/${user?._id}/dashboard`}
         open={sidebarOpen}
         setOpen={setSidebarOpen}
       />

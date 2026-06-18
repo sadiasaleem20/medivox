@@ -17,6 +17,15 @@ import DoctorVerification from "./pages/admin/DoctorVerification";
 import UserList from "./pages/admin/UserList";
 import ProtectedRoute from "./components/shared/ProtectedRoute";
 
+function RedirectToDashboard() {
+  const { user } = useAuthStore();
+  if (!user) return <Navigate to="/login" replace />;
+  if (user.role === "admin") return <Navigate to="/admin" replace />;
+  if (user.role === "doctor")
+    return <Navigate to={`/doctor/${user._id}/dashboard`} replace />;
+  return <Navigate to={`/user/${user._id}/dashboard`} replace />;
+}
+
 export default function App() {
   return (
     <Routes>
@@ -24,8 +33,9 @@ export default function App() {
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
 
+      {/* User routes with ID */}
       <Route
-        path="/dashboard"
+        path="/user/:userId/dashboard"
         element={
           <ProtectedRoute role="user">
             <UserDashboard />
@@ -33,7 +43,7 @@ export default function App() {
         }
       />
       <Route
-        path="/consult"
+        path="/user/:userId/consult"
         element={
           <ProtectedRoute role="user">
             <AIConsult />
@@ -41,7 +51,7 @@ export default function App() {
         }
       />
       <Route
-        path="/doctors"
+        path="/user/:userId/doctors"
         element={
           <ProtectedRoute role="user">
             <DoctorMatch />
@@ -49,7 +59,7 @@ export default function App() {
         }
       />
       <Route
-        path="/prescription"
+        path="/user/:userId/prescription"
         element={
           <ProtectedRoute role="user">
             <Prescription />
@@ -57,7 +67,7 @@ export default function App() {
         }
       />
       <Route
-        path="/medicines"
+        path="/user/:userId/medicines"
         element={
           <ProtectedRoute role="user">
             <MedicineScheduler />
@@ -65,8 +75,9 @@ export default function App() {
         }
       />
 
+      {/* Doctor routes with ID */}
       <Route
-        path="/doctor/dashboard"
+        path="/doctor/:doctorId/dashboard"
         element={
           <ProtectedRoute role="doctor">
             <DoctorDashboard />
@@ -74,7 +85,7 @@ export default function App() {
         }
       />
       <Route
-        path="/doctor/profile"
+        path="/doctor/:doctorId/profile"
         element={
           <ProtectedRoute role="doctor">
             <DoctorProfile />
@@ -82,7 +93,7 @@ export default function App() {
         }
       />
       <Route
-        path="/doctor/appointments"
+        path="/doctor/:doctorId/appointments"
         element={
           <ProtectedRoute role="doctor">
             <Appointments />
@@ -90,6 +101,7 @@ export default function App() {
         }
       />
 
+      {/* Admin routes */}
       <Route
         path="/admin"
         element={
@@ -114,6 +126,13 @@ export default function App() {
           </ProtectedRoute>
         }
       />
+
+      {/* Old routes redirect */}
+      <Route path="/dashboard" element={<RedirectToDashboard />} />
+      <Route path="/consult" element={<RedirectToDashboard />} />
+      <Route path="/doctors" element={<RedirectToDashboard />} />
+      <Route path="/prescription" element={<RedirectToDashboard />} />
+      <Route path="/medicines" element={<RedirectToDashboard />} />
 
       <Route path="*" element={<Navigate to="/" />} />
     </Routes>
