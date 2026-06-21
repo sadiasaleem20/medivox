@@ -19,66 +19,9 @@ import {
   Pill,
 } from "lucide-react";
 import { useAuthStore } from "../../store/authStore";
-import Logo from "../../components/shared/Logo";
+import UserSidebar from "../../components/shared/UserSidebar";
 import api from "../../lib/axios";
 import toast from "react-hot-toast";
-import { useParams } from "react-router-dom";
-
-function Sidebar({ active, onLogout, open, setOpen }) {
-  const links = [
-    { to: "/dashboard", label: "Overview", icon: Activity },
-    { to: "/consult", label: "AI Consultation", icon: MessageSquare },
-    { to: "/doctors", label: "Find Doctors", icon: Stethoscope },
-    { to: "/prescription", label: "Prescriptions", icon: FileText },
-    { to: "/medicines", label: "Medicines", icon: Bell },
-  ];
-  return (
-    <>
-      {open && (
-        <div
-          className="fixed inset-0 bg-black/40 z-20 lg:hidden"
-          onClick={() => setOpen(false)}
-        />
-      )}
-      <aside
-        className={`fixed top-0 left-0 h-full w-64 z-30 flex flex-col transition-transform duration-300
-                        ${open ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}`}
-        style={{ background: "#042C53" }}
-      >
-        <div className="p-6 border-b border-white/10">
-          <Logo size="md" />
-        </div>
-        <nav className="flex-1 p-4 space-y-1">
-          {links.map(({ to, label, icon: Icon }) => (
-            <Link
-              key={to}
-              to={to}
-              onClick={() => setOpen(false)}
-              className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all"
-              style={{
-                background: active === to ? "#0C447C" : "transparent",
-                color: active === to ? "white" : "rgba(255,255,255,0.6)",
-              }}
-            >
-              <Icon size={18} />
-              {label}
-            </Link>
-          ))}
-        </nav>
-        <div className="p-4 border-t border-white/10">
-          <button
-            onClick={onLogout}
-            className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium w-full hover:bg-white/10 transition-all"
-            style={{ color: "rgba(255,255,255,0.6)" }}
-          >
-            <LogOut size={18} />
-            Sign out
-          </button>
-        </div>
-      </aside>
-    </>
-  );
-}
 
 function MedicineCard({ medicine, onTake, taken }) {
   return (
@@ -194,7 +137,7 @@ function NotificationBanner({ medicine, onDismiss }) {
 }
 
 export default function MedicineScheduler() {
-  const { logout } = useAuthStore();
+  const { user } = useAuthStore();
   const navigate = useNavigate();
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -341,16 +284,11 @@ export default function MedicineScheduler() {
   };
 
   const nextDue = getNextDue();
-  const handleLogout = () => {
-    logout();
-    navigate("/login");
-  };
 
   return (
     <div className="min-h-screen bg-cloud flex">
-      <Sidebar
-        active="/medicines"
-        onLogout={handleLogout}
+      <UserSidebar
+        active={`/user/${user?._id}/medicines`}
         open={sidebarOpen}
         setOpen={setSidebarOpen}
       />
@@ -410,7 +348,7 @@ export default function MedicineScheduler() {
                 Upload a prescription to start your medicine schedule
               </p>
               <Link
-                to="/prescription"
+                to={`/user/${user?._id}/prescription`}
                 className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white"
                 style={{ background: "#0C447C" }}
               >

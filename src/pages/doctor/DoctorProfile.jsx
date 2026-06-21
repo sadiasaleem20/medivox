@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   User,
@@ -11,7 +11,6 @@ import {
   FileText,
   Upload,
   Save,
-  LogOut,
   Menu,
   CheckCircle,
   X,
@@ -22,6 +21,7 @@ import {
   Edit,
 } from "lucide-react";
 import { useAuthStore } from "../../store/authStore";
+import DoctorSidebar from "../../components/shared/DoctorSidebar";
 import api from "../../lib/axios";
 import toast from "react-hot-toast";
 import { SPECIALIZATIONS } from "../../constants";
@@ -112,7 +112,6 @@ function DocumentViewModal({ doc, onClose }) {
 
 export default function DoctorProfile() {
   const { user } = useAuthStore();
-  const navigate = useNavigate();
   const docFileRef = useRef();
   const picRef = useRef();
 
@@ -134,8 +133,6 @@ export default function DoctorProfile() {
     availableDays: [],
     about: "",
   });
-
-  const id = user?._id;
 
   useEffect(() => {
     api
@@ -261,9 +258,8 @@ export default function DoctorProfile() {
 
   return (
     <div className="min-h-screen bg-cloud flex">
-      <Sidebar
-        active="/doctor/profile"
-        onLogout={handleLogout}
+      <DoctorSidebar
+        active={`/doctor/${user?._id}/profile`}
         open={sidebarOpen}
         setOpen={setSidebarOpen}
       />
@@ -810,7 +806,6 @@ export default function DoctorProfile() {
                   </div>
                 </div>
 
-                {/* Tips when pending */}
                 {doctor?.status === "pending" && (
                   <div
                     className="card"

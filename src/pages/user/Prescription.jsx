@@ -19,66 +19,9 @@ import {
   Plus,
 } from "lucide-react";
 import { useAuthStore } from "../../store/authStore";
-import Logo from "../../components/shared/Logo";
+import UserSidebar from "../../components/shared/UserSidebar";
 import api from "../../lib/axios";
 import toast from "react-hot-toast";
-import { useParams } from "react-router-dom";
-
-function Sidebar({ active, onLogout, open, setOpen }) {
-  const links = [
-    { to: "/dashboard", label: "Overview", icon: Activity },
-    { to: "/consult", label: "AI Consultation", icon: MessageSquare },
-    { to: "/doctors", label: "Find Doctors", icon: Stethoscope },
-    { to: "/prescription", label: "Prescriptions", icon: FileText },
-    { to: "/medicines", label: "Medicines", icon: Bell },
-  ];
-  return (
-    <>
-      {open && (
-        <div
-          className="fixed inset-0 bg-black/40 z-20 lg:hidden"
-          onClick={() => setOpen(false)}
-        />
-      )}
-      <aside
-        className={`fixed top-0 left-0 h-full w-64 z-30 flex flex-col transition-transform duration-300
-                        ${open ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}`}
-        style={{ background: "#042C53" }}
-      >
-        <div className="p-6 border-b border-white/10">
-          <Logo size="md" />
-        </div>
-        <nav className="flex-1 p-4 space-y-1">
-          {links.map(({ to, label, icon: Icon }) => (
-            <Link
-              key={to}
-              to={to}
-              onClick={() => setOpen(false)}
-              className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all"
-              style={{
-                background: active === to ? "#0C447C" : "transparent",
-                color: active === to ? "white" : "rgba(255,255,255,0.6)",
-              }}
-            >
-              <Icon size={18} />
-              {label}
-            </Link>
-          ))}
-        </nav>
-        <div className="p-4 border-t border-white/10">
-          <button
-            onClick={onLogout}
-            className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium w-full hover:bg-white/10 transition-all"
-            style={{ color: "rgba(255,255,255,0.6)" }}
-          >
-            <LogOut size={18} />
-            Sign out
-          </button>
-        </div>
-      </aside>
-    </>
-  );
-}
 
 const FREQ_OPTIONS = [
   "Once daily",
@@ -101,7 +44,7 @@ const TIME_OPTIONS = [
 ];
 
 export default function Prescription() {
-  const { logout } = useAuthStore();
+  const { user } = useAuthStore();
   const navigate = useNavigate();
   const fileRef = useRef();
 
@@ -273,7 +216,7 @@ If you cannot read the prescription clearly, return an empty array: []`,
       setImage(null);
       setPreview(null);
       setMedicines([]);
-      navigate("/medicines");
+      navigate(`/user/${user?._id}/medicines`);
     } catch (err) {
       toast.error("Failed to save prescription");
     } finally {
@@ -281,20 +224,13 @@ If you cannot read the prescription clearly, return an empty array: []`,
     }
   };
 
-  const handleLogout = () => {
-    logout();
-    navigate("/login");
-  };
-
   return (
     <div className="min-h-screen bg-cloud flex">
-      <Sidebar
-        active="/prescription"
-        onLogout={handleLogout}
+      <UserSidebar
+        active={`/user/${user?._id}/prescription`}
         open={sidebarOpen}
         setOpen={setSidebarOpen}
       />
-
       <div className="flex-1 lg:ml-64 flex flex-col">
         <header className="bg-white border-b border-sky-light px-6 py-4 flex items-center gap-4 sticky top-0 z-10">
           <button

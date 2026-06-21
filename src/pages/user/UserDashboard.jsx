@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { useAuthStore } from "../../store/authStore";
 import Logo from "../../components/shared/Logo";
+import UserSidebar from "../../components/shared/UserSidebar";
 import api from "../../lib/axios";
 
 const fadeUp = {
@@ -89,7 +90,7 @@ function Sidebar({ active, onLogout, open, setOpen }) {
 }
 
 export default function UserDashboard() {
-  const { user, logout } = useAuthStore();
+  const { user } = useAuthStore();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [chats, setChats] = useState([]);
@@ -113,11 +114,6 @@ export default function UserDashboard() {
     };
     fetchData();
   }, []);
-
-  const handleLogout = () => {
-    logout();
-    navigate("/login");
-  };
 
   const QUICK_ACTIONS = [
     {
@@ -156,9 +152,8 @@ export default function UserDashboard() {
 
   return (
     <div className="min-h-screen bg-cloud flex">
-      <Sidebar
-        active="/dashboard"
-        onLogout={handleLogout}
+      <UserSidebar
+        active={`/user/${user?._id}/dashboard`}
         open={sidebarOpen}
         setOpen={setSidebarOpen}
       />

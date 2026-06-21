@@ -1,10 +1,9 @@
 import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   Calendar,
   Clock,
-  LogOut,
   Menu,
   Activity,
   ChevronRight,
@@ -16,6 +15,7 @@ import {
 } from "lucide-react";
 import { useAuthStore } from "../../store/authStore";
 import api from "../../lib/axios";
+import DoctorSidebar from "../../components/shared/DoctorSidebar";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -112,7 +112,6 @@ function StatusBanner({ status, rejectionReason, userId }) {
 
 export default function DoctorDashboard() {
   const { user } = useAuthStore();
-  const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [doctor, setDoctor] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -160,9 +159,8 @@ export default function DoctorDashboard() {
 
   return (
     <div className="min-h-screen bg-cloud flex">
-      <Sidebar
-        active="/doctor/dashboard"
-        onLogout={handleLogout}
+      <DoctorSidebar
+        active={`/doctor/${user?._id}/dashboard`}
         open={sidebarOpen}
         setOpen={setSidebarOpen}
       />
@@ -254,7 +252,7 @@ export default function DoctorDashboard() {
                     Profile summary
                   </h2>
                   <Link
-                    to={`/doctor/${id}/profile`}
+                    to={`/doctor/${user?._id}/profile`}
                     className="flex items-center gap-1 text-xs font-medium px-3 py-1.5 rounded-lg"
                     style={{ background: "#E6F1FB", color: "#0C447C" }}
                   >
@@ -308,7 +306,7 @@ export default function DoctorDashboard() {
                 className="grid sm:grid-cols-2 gap-4"
               >
                 <Link
-                  to={`/doctor/${id}/profile`}
+                  to={`/doctor/${user?._id}/profile`}
                   className="card hover:shadow-md hover:-translate-y-1 transition-all flex items-center gap-4"
                 >
                   <div
@@ -329,7 +327,7 @@ export default function DoctorDashboard() {
                 </Link>
 
                 <Link
-                  to={`/doctor/${id}/appointments`}
+                  to={`/doctor/${user?._id}/appointments`}
                   className="card hover:shadow-md hover:-translate-y-1 transition-all flex items-center gap-4"
                 >
                   <div

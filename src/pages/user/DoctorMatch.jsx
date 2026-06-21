@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import {
   Search,
   MapPin,
@@ -7,77 +7,15 @@ import {
   DollarSign,
   Star,
   Filter,
-  LogOut,
   Menu,
-  Activity,
-  MessageSquare,
-  FileText,
-  Bell,
   Stethoscope,
   ChevronDown,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useAuthStore } from "../../store/authStore";
-import Logo from "../../components/shared/Logo";
+import UserSidebar from "../../components/shared/UserSidebar";
 import api from "../../lib/axios";
 import { SPECIALIZATIONS, CITIES } from "../../constants";
-import { useParams } from "react-router-dom";
-
-function Sidebar({ active, onLogout, open, setOpen }) {
-  const links = [
-    { to: "/dashboard", label: "Overview", icon: Activity },
-    { to: "/consult", label: "AI Consultation", icon: MessageSquare },
-    { to: "/doctors", label: "Find Doctors", icon: Stethoscope },
-    { to: "/prescription", label: "Prescriptions", icon: FileText },
-    { to: "/medicines", label: "Medicines", icon: Bell },
-  ];
-  return (
-    <>
-      {open && (
-        <div
-          className="fixed inset-0 bg-black/40 z-20 lg:hidden"
-          onClick={() => setOpen(false)}
-        />
-      )}
-      <aside
-        className={`fixed top-0 left-0 h-full w-64 z-30 flex flex-col transition-transform duration-300
-                        ${open ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}`}
-        style={{ background: "#042C53" }}
-      >
-        <div className="p-6 border-b border-white/10">
-          <Logo size="md" />
-        </div>
-        <nav className="flex-1 p-4 space-y-1">
-          {links.map(({ to, label, icon: Icon }) => (
-            <Link
-              key={to}
-              to={to}
-              onClick={() => setOpen(false)}
-              className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all"
-              style={{
-                background: active === to ? "#0C447C" : "transparent",
-                color: active === to ? "white" : "rgba(255,255,255,0.6)",
-              }}
-            >
-              <Icon size={18} />
-              {label}
-            </Link>
-          ))}
-        </nav>
-        <div className="p-4 border-t border-white/10">
-          <button
-            onClick={onLogout}
-            className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium w-full hover:bg-white/10 transition-all"
-            style={{ color: "rgba(255,255,255,0.6)" }}
-          >
-            <LogOut size={18} />
-            Sign out
-          </button>
-        </div>
-      </aside>
-    </>
-  );
-}
 
 function DoctorCard({ doctor }) {
   const { user: docUser } = doctor;
@@ -89,10 +27,23 @@ function DoctorCard({ doctor }) {
     >
       <div className="flex items-start gap-4 mb-4">
         <div
-          className="w-14 h-14 rounded-2xl flex items-center justify-center text-xl font-bold text-white flex-shrink-0"
-          style={{ background: "#0C447C" }}
+          className="w-14 h-14 rounded-2xl overflow-hidden flex-shrink-0 border border-sky-light"
+          style={{ background: "#E6F1FB" }}
         >
-          {docUser?.name?.charAt(0)}
+          {doctor.profilePicture ? (
+            <img
+              src={doctor.profilePicture}
+              className="w-full h-full object-cover"
+              alt={docUser?.name}
+            />
+          ) : (
+            <div
+              className="w-full h-full flex items-center justify-center text-xl font-bold"
+              style={{ color: "#0C447C" }}
+            >
+              {docUser?.name?.charAt(0)}
+            </div>
+          )}
         </div>
         <div className="flex-1 min-w-0">
           <h3 className="font-bold text-midnight text-base truncate">
@@ -160,8 +111,7 @@ function DoctorCard({ doctor }) {
 }
 
 export default function DoctorMatch() {
-  const { logout } = useAuthStore();
-  const navigate = useNavigate();
+  const { user } = useAuthStore();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [doctors, setDoctors] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -196,16 +146,10 @@ export default function DoctorMatch() {
       d.specialization?.toLowerCase().includes(search.toLowerCase()),
   );
 
-  const handleLogout = () => {
-    logout();
-    navigate("/login");
-  };
-
   return (
     <div className="min-h-screen bg-cloud flex">
-      <Sidebar
-        active="/doctors"
-        onLogout={handleLogout}
+      <UserSidebar
+        active={`/user/${user?._id}/doctors`}
         open={sidebarOpen}
         setOpen={setSidebarOpen}
       />

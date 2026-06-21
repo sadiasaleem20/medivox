@@ -127,8 +127,9 @@ export default function Register() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Registration failed");
       setAuth(data.user, data.token);
-      if (data.user.role === "doctor") navigate("/doctor/dashboard");
-      else navigate("/dashboard");
+      if (data.user.role === "doctor")
+        navigate(`/doctor/${data.user._id}/dashboard`);
+      else navigate(`/user/${data.user._id}/dashboard`);
     } catch (err) {
       setError(err.message);
     } finally {

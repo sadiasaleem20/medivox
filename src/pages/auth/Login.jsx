@@ -46,8 +46,10 @@ export default function Login() {
       if (!res.ok) throw new Error(data.message || "Login failed");
       setAuth(data.user, data.token);
       if (data.user.role === "admin") navigate("/admin");
-      if (data.user.role === "doctor") navigate("/doctor/dashboard");
-      if (data.user.role === "user") navigate("/dashboard");
+      if (data.user.role === "doctor")
+        navigate(`/doctor/${data.user._id}/dashboard`);
+      if (data.user.role === "user")
+        navigate(`/user/${data.user._id}/dashboard`);
     } catch (err) {
       setError(err.message);
     } finally {

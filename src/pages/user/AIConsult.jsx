@@ -1,5 +1,10 @@
 import { useState, useEffect, useRef } from "react";
-import { useNavigate, useSearchParams, Link } from "react-router-dom";
+import {
+  useNavigate,
+  useSearchParams,
+  Link,
+  useParams,
+} from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Send,
@@ -19,7 +24,7 @@ import { useAuthStore } from "../../store/authStore";
 import Logo from "../../components/shared/Logo";
 import api from "../../lib/axios";
 import toast from "react-hot-toast";
-import { useParams } from "react-router-dom";
+import UserSidebar from "../../components/shared/UserSidebar";
 
 const SYSTEM_PROMPT = `You are Medivox AI, a helpful medical triage assistant. 
 Your job is to:
@@ -160,14 +165,14 @@ export default function AIConsult() {
       setChats((prev) => [newChat, ...prev]);
       setActiveChatId(newChat._id);
       setMessages([]);
-      navigate(`/consult?id=${newChat._id}`);
+      navigate(`/user/${user?._id}/consult?id=${newChat._id}`);
     } catch (err) {
       toast.error("Could not start new chat");
     }
   };
 
   const selectChat = (id) => {
-    navigate(`/consult?id=${id}`);
+    navigate(`/user/${user?._id}/consult`);
   };
 
   const deleteChat = async (e, id) => {
@@ -197,7 +202,7 @@ export default function AIConsult() {
         currentChatId = res.data.chat._id;
         setActiveChatId(currentChatId);
         setChats((prev) => [res.data.chat, ...prev]);
-        navigate(`/consult?id=${currentChatId}`);
+        navigate(`/user/${user?._id}/consult?id=${currentChatId}`);
       } catch {
         toast.error("Could not create chat");
         return;
@@ -273,16 +278,10 @@ export default function AIConsult() {
     }
   };
 
-  const handleLogout = () => {
-    logout();
-    navigate("/login");
-  };
-
   return (
     <div className="min-h-screen bg-cloud flex">
-      <Sidebar
-        active="/consult"
-        onLogout={handleLogout}
+      <UserSidebar
+        active={`/user/${user?._id}/consult`}
         open={sidebarOpen}
         setOpen={setSidebarOpen}
       />
