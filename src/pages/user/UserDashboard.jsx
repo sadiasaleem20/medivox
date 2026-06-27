@@ -1,22 +1,17 @@
 import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   MessageSquare,
   Stethoscope,
   FileText,
   Bell,
-  LogOut,
   Menu,
-  Activity,
-  User,
   ChevronRight,
-  Clock,
   Shield,
   Plus,
 } from "lucide-react";
 import { useAuthStore } from "../../store/authStore";
-import Logo from "../../components/shared/Logo";
 import UserSidebar from "../../components/shared/UserSidebar";
 import api from "../../lib/axios";
 
@@ -30,68 +25,10 @@ const stagger = {
   show: { transition: { staggerChildren: 0.08 } },
 };
 
-function Sidebar({ active, onLogout, open, setOpen }) {
-  const links = [
-    { to: "/dashboard", label: "Overview", icon: Activity },
-    { to: "/consult", label: "AI Consultation", icon: MessageSquare },
-    { to: "/doctors", label: "Find Doctors", icon: Stethoscope },
-    { to: "/prescription", label: "Prescriptions", icon: FileText },
-    { to: "/medicines", label: "Medicines", icon: Bell },
-  ];
-
-  return (
-    <>
-      {open && (
-        <div
-          className="fixed inset-0 bg-black/40 z-20 lg:hidden"
-          onClick={() => setOpen(false)}
-        />
-      )}
-      <aside
-        className={`fixed top-0 left-0 h-full w-64 z-30 flex flex-col
-                        transition-transform duration-300
-                        ${open ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}`}
-        style={{ background: "#042C53" }}
-      >
-        <div className="p-6 border-b border-white/10">
-          <Logo size="md" />
-        </div>
-        <nav className="flex-1 p-4 space-y-1">
-          {links.map(({ to, label, icon: Icon }) => (
-            <Link
-              key={to}
-              to={to}
-              onClick={() => setOpen(false)}
-              className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all"
-              style={{
-                background: active === to ? "#0C447C" : "transparent",
-                color: active === to ? "white" : "rgba(255,255,255,0.6)",
-              }}
-            >
-              <Icon size={18} />
-              {label}
-            </Link>
-          ))}
-        </nav>
-        <div className="p-4 border-t border-white/10">
-          <button
-            onClick={onLogout}
-            className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium
-                       w-full hover:bg-white/10 transition-all"
-            style={{ color: "rgba(255,255,255,0.6)" }}
-          >
-            <LogOut size={18} />
-            Sign out
-          </button>
-        </div>
-      </aside>
-    </>
-  );
-}
-
 export default function UserDashboard() {
   const { user } = useAuthStore();
-  const navigate = useNavigate();
+  const id = user?._id;
+
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [chats, setChats] = useState([]);
   const [prescriptions, setPrescriptions] = useState([]);
@@ -117,7 +54,7 @@ export default function UserDashboard() {
 
   const QUICK_ACTIONS = [
     {
-      to: "/consult",
+      to: `/user/${id}/consult`,
       label: "Start AI consultation",
       desc: "Describe your symptoms to our AI",
       icon: MessageSquare,
@@ -125,7 +62,7 @@ export default function UserDashboard() {
       color: "#0C447C",
     },
     {
-      to: "/doctors",
+      to: `/user/${id}/doctors`,
       label: "Find a doctor",
       desc: "Browse verified specialists near you",
       icon: Stethoscope,
@@ -133,7 +70,7 @@ export default function UserDashboard() {
       color: "#1D9E75",
     },
     {
-      to: "/prescription",
+      to: `/user/${id}/prescription`,
       label: "Upload prescription",
       desc: "Let AI read and manage your medicines",
       icon: FileText,
@@ -141,7 +78,7 @@ export default function UserDashboard() {
       color: "#0C447C",
     },
     {
-      to: "/medicines",
+      to: `/user/${id}/medicines`,
       label: "Medicine schedule",
       desc: "View your daily medicine reminders",
       icon: Bell,
@@ -153,7 +90,7 @@ export default function UserDashboard() {
   return (
     <div className="min-h-screen bg-cloud flex">
       <UserSidebar
-        active={`/user/${user?._id}/dashboard`}
+        active={`/user/${id}/dashboard`}
         open={sidebarOpen}
         setOpen={setSidebarOpen}
       />
@@ -185,13 +122,13 @@ export default function UserDashboard() {
           </div>
           <div className="flex items-center gap-3">
             <Link
-              to="/medicines"
+              to={`/user/${id}/medicines`}
               className="relative p-2 rounded-xl hover:bg-sky-light transition-colors"
             >
               <Bell size={18} className="text-slate" />
             </Link>
             <Link
-              to="/profile"
+              to={`/user/${id}/profile`}
               className="w-9 h-9 rounded-xl flex items-center justify-center
                          text-sm font-bold text-white flex-shrink-0"
               style={{ background: "#0C447C" }}
@@ -236,8 +173,8 @@ export default function UserDashboard() {
                     Good
                   </p>
                   <Link
-                    to="/consult"
-                    className="inline-flex items-center gap-2 text-sm font-semibold px-4 py-2 rounded-lg transition-all"
+                    to={`/user/${id}/consult`}
+                    className="inline-flex items-center gap-2 text-sm font-semibold px-4 py-2 rounded-lg"
                     style={{ background: "#1D9E75", color: "white" }}
                   >
                     Start consultation <ChevronRight size={14} />
@@ -301,7 +238,7 @@ export default function UserDashboard() {
                       Recent consultations
                     </h2>
                     <Link
-                      to="/consult"
+                      to={`/user/${id}/consult`}
                       className="flex items-center gap-1 text-xs font-medium"
                       style={{ color: "#185FA5" }}
                     >
@@ -319,7 +256,7 @@ export default function UserDashboard() {
                         No consultations yet
                       </p>
                       <Link
-                        to="/consult"
+                        to={`/user/${id}/consult`}
                         className="text-xs font-semibold px-4 py-2 rounded-lg inline-block"
                         style={{ background: "#E6F1FB", color: "#0C447C" }}
                       >
@@ -331,7 +268,7 @@ export default function UserDashboard() {
                       {chats.map((chat) => (
                         <Link
                           key={chat._id}
-                          to={`/consult?id=${chat._id}`}
+                          to={`/user/${id}/consult?id=${chat._id}`}
                           className="flex items-center gap-3 p-3 rounded-xl border border-sky-light
                                      hover:bg-cloud transition-colors"
                         >
@@ -375,7 +312,7 @@ export default function UserDashboard() {
                       Recent prescriptions
                     </h2>
                     <Link
-                      to="/prescription"
+                      to={`/user/${id}/prescription`}
                       className="flex items-center gap-1 text-xs font-medium"
                       style={{ color: "#185FA5" }}
                     >
@@ -393,7 +330,7 @@ export default function UserDashboard() {
                         No prescriptions uploaded
                       </p>
                       <Link
-                        to="/prescription"
+                        to={`/user/${id}/prescription`}
                         className="text-xs font-semibold px-4 py-2 rounded-lg inline-block"
                         style={{ background: "#E6F1FB", color: "#0C447C" }}
                       >
@@ -438,7 +375,7 @@ export default function UserDashboard() {
                 </motion.div>
               </div>
 
-              {/* Health tips */}
+              {/* Health tip */}
               <motion.div
                 variants={fadeUp}
                 className="card border-l-4"

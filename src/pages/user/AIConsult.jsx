@@ -1,25 +1,7 @@
 import { useState, useEffect, useRef } from "react";
-import {
-  useNavigate,
-  useSearchParams,
-  Link,
-  useParams,
-} from "react-router-dom";
+import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  Send,
-  Plus,
-  Trash2,
-  MessageSquare,
-  LogOut,
-  Menu,
-  Activity,
-  Stethoscope,
-  FileText,
-  Bell,
-  Brain,
-  User,
-} from "lucide-react";
+import { Send, Plus, Trash2, MessageSquare, Menu, Brain } from "lucide-react";
 import { useAuthStore } from "../../store/authStore";
 import Logo from "../../components/shared/Logo";
 import api from "../../lib/axios";
@@ -172,7 +154,7 @@ export default function AIConsult() {
   };
 
   const selectChat = (id) => {
-    navigate(`/user/${user?._id}/consult`);
+    navigate(`/user/${user?._id}/consult?id=${id}`);
   };
 
   const deleteChat = async (e, id) => {
@@ -183,7 +165,7 @@ export default function AIConsult() {
       if (activeChatId === id) {
         setActiveChatId(null);
         setMessages([]);
-        navigate("/consult");
+        navigate(`/user/${user?._id}/consult`);
       }
       toast.success("Chat deleted");
     } catch {
