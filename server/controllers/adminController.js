@@ -1,5 +1,9 @@
 import Doctor from "../models/Doctor.js";
 import User from "../models/User.js";
+import {
+  sendDoctorApprovedEmail,
+  sendDoctorRejectedEmail,
+} from "../utils/email.js";
 
 export const getPendingDoctors = async (req, res) => {
   try {
@@ -32,7 +36,18 @@ export const updateDoctorStatus = async (req, res) => {
       { status, rejectionReason: rejectionReason || "" },
       { new: true },
     ).populate("user", "-password");
+
     if (!doctor) return res.status(404).json({ message: "Doctor not found" });
+
+    const doctorEmail = doctor.user?.email;
+    const doctorName = doctor.user?.name;
+
+    if (status === "approved") {
+      await sendDoctorApprovedEmail(doctorEmail, doctorName);
+    } else if (status === "rejected") {
+      await sendDoctorRejectedEmail(doctorEmail, doctorName, rejectionReason);
+    }
+
     res.json({ doctor });
   } catch (err) {
     res.status(500).json({ message: err.message });
