@@ -17,9 +17,9 @@ export default function NotFound() {
   return (
     <div className="min-h-screen bg-cloud flex flex-col">
       {/* Simple navbar */}
-      {/* <nav className="bg-white border-b border-sky-light px-6 py-4">
+      <nav className="bg-white border-b border-sky-light px-6 py-4">
         <Logo size="md" />
-      </nav> */}
+      </nav>
 
       {/* Main content */}
       <div className="flex-1 flex items-center justify-center px-6">
