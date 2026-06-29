@@ -11,13 +11,14 @@ import {
   Stethoscope,
   ChevronDown,
 } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useAuthStore } from "../../store/authStore";
 import UserSidebar from "../../components/shared/UserSidebar";
+import BookingModal from "../../components/shared/BookingModal";
 import api from "../../lib/axios";
 import { SPECIALIZATIONS, CITIES } from "../../constants";
 
-function DoctorCard({ doctor }) {
+function DoctorCard({ doctor, onBook }) {
   const { user: docUser } = doctor;
   return (
     <motion.div
@@ -99,6 +100,7 @@ function DoctorCard({ doctor }) {
       )}
 
       <button
+        onClick={() => onBook(doctor)}
         className="w-full py-2.5 rounded-xl text-sm font-semibold text-white transition-all active:scale-95"
         style={{ background: "#0C447C" }}
         onMouseEnter={(e) => (e.currentTarget.style.background = "#185FA5")}
@@ -119,6 +121,7 @@ export default function DoctorMatch() {
   const [city, setCity] = useState("");
   const [specialization, setSpec] = useState("");
   const [showFilters, setShowFilters] = useState(false);
+  const [selectedDoctor, setSelectedDoctor] = useState(null);
 
   useEffect(() => {
     fetchDoctors();
@@ -289,12 +292,25 @@ export default function DoctorMatch() {
           ) : (
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
               {filtered.map((doc) => (
-                <DoctorCard key={doc._id} doctor={doc} />
+                <DoctorCard
+                  key={doc._id}
+                  doctor={doc}
+                  onBook={setSelectedDoctor}
+                />
               ))}
             </div>
           )}
         </main>
       </div>
+      <AnimatePresence>
+        {selectedDoctor && (
+          <BookingModal
+            doctor={selectedDoctor}
+            userId={user?._id}
+            onClose={() => setSelectedDoctor(null)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }

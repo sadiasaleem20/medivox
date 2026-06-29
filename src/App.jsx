@@ -17,6 +17,7 @@ import DoctorVerification from "./pages/admin/DoctorVerification";
 import UserList from "./pages/admin/UserList";
 import ProtectedRoute from "./components/shared/ProtectedRoute";
 import UserProfile from "./pages/user/UserProfile";
+import MyAppointments from "./pages/user/MyAppointments";
 
 function SmartRedirect() {
   const { user, token } = useAuthStore();
@@ -132,6 +133,14 @@ export default function App() {
         element={
           <ProtectedRoute role="user">
             <UserProfile />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/user/:userId/appointments"
+        element={
+          <ProtectedRoute role="user">
+            <MyAppointments />
           </ProtectedRoute>
         }
       />

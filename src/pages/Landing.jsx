@@ -295,7 +295,7 @@ export default function Landing() {
 
       {/* Hero */}
       <section className="relative min-h-screen flex items-center pt-16">
-        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        {/* <div className="absolute inset-0 pointer-events-none overflow-hidden">
           <div
             className="absolute top-20 right-0 w-[600px] h-[600px] rounded-full"
             style={{
@@ -310,7 +310,7 @@ export default function Landing() {
                 "radial-gradient(circle, #E1F5EE 0%, transparent 70%)",
             }}
           />
-        </div>
+        </div> */}
 
         <div className="max-w-6xl mx-auto px-6 py-24 grid lg:grid-cols-2 gap-16 items-center">
           <motion.div variants={stagger} initial="hidden" animate="show">

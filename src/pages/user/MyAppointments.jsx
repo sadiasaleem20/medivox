@@ -1,17 +1,9 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import {
-  Calendar,
-  Menu,
-  Clock,
-  User,
-  CheckCircle,
-  XCircle,
-  ChevronRight,
-} from "lucide-react";
+import { Calendar, Clock, MapPin, Menu, X } from "lucide-react";
 import { useAuthStore } from "../../store/authStore";
-import DoctorSidebar from "../../components/shared/DoctorSidebar";
+import UserSidebar from "../../components/shared/UserSidebar";
 import api from "../../lib/axios";
 import toast from "react-hot-toast";
 
@@ -22,8 +14,10 @@ const STATUS_COLORS = {
   completed: { bg: "#E6F1FB", color: "#0C447C", label: "Completed" },
 };
 
-export default function Appointments() {
+export default function MyAppointments() {
   const { user } = useAuthStore();
+  const id = user?._id;
+
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -31,21 +25,21 @@ export default function Appointments() {
 
   useEffect(() => {
     api
-      .get("/appointments/doctor")
+      .get("/appointments/my")
       .then((res) => setAppointments(res.data.appointments))
       .catch(console.error)
       .finally(() => setLoading(false));
   }, []);
 
-  const handleStatus = async (id, status) => {
+  const handleCancel = async (aptId) => {
     try {
-      const res = await api.patch(`/appointments/${id}/status`, { status });
+      await api.patch(`/appointments/${aptId}/cancel`);
       setAppointments((prev) =>
-        prev.map((a) => (a._id === id ? res.data.appointment : a)),
+        prev.map((a) => (a._id === aptId ? { ...a, status: "cancelled" } : a)),
       );
-      toast.success(`Appointment ${status}`);
+      toast.success("Appointment cancelled");
     } catch {
-      toast.error("Failed to update status");
+      toast.error("Could not cancel appointment");
     }
   };
 
@@ -57,8 +51,8 @@ export default function Appointments() {
 
   return (
     <div className="min-h-screen bg-cloud flex">
-      <DoctorSidebar
-        active={`/doctor/${user?._id}/appointments`}
+      <UserSidebar
+        active={`/user/${id}/appointments`}
         open={sidebarOpen}
         setOpen={setSidebarOpen}
       />
@@ -75,15 +69,14 @@ export default function Appointments() {
             <Menu size={22} />
           </button>
           <div>
-            <h1 className="text-lg font-bold text-midnight">Appointments</h1>
+            <h1 className="text-lg font-bold text-midnight">My appointments</h1>
             <p className="text-xs text-slate">
-              {appointments.length} total appointments
+              {appointments.length} total bookings
             </p>
           </div>
         </header>
 
         <main className="flex-1 p-6 space-y-5">
-          {/* Tabs */}
           <div className="flex gap-2 flex-wrap">
             {TABS.map((t) => (
               <button
@@ -112,18 +105,24 @@ export default function Appointments() {
                 className="mx-auto mb-3 opacity-20 text-navy"
               />
               <p className="text-base font-semibold text-midnight mb-1">
-                No {tab === "all" ? "" : tab} appointments
+                No appointments yet
               </p>
-              <p className="text-sm text-slate">
-                {tab === "all"
-                  ? "Patients will appear here once they book with you"
-                  : `No ${tab} appointments found`}
+              <p className="text-sm text-slate mb-5">
+                Browse verified doctors and book your first appointment
               </p>
+              <Link
+                to={`/user/${id}/doctors`}
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white"
+                style={{ background: "#0C447C" }}
+              >
+                Find a doctor
+              </Link>
             </div>
           ) : (
             <div className="space-y-3">
               {filtered.map((apt, i) => {
                 const sc = STATUS_COLORS[apt.status];
+                const doc = apt.doctor;
                 return (
                   <motion.div
                     key={apt._id}
@@ -132,22 +131,39 @@ export default function Appointments() {
                     transition={{ delay: i * 0.04 }}
                     className="card hover:shadow-md transition-all"
                   >
-                    <div className="flex items-start justify-between gap-4">
+                    <div className="flex items-start justify-between gap-3 mb-4">
                       <div className="flex items-center gap-3">
                         <div
-                          className="w-10 h-10 rounded-xl flex items-center justify-center
-                                        text-sm font-bold text-white flex-shrink-0"
-                          style={{ background: "#185FA5" }}
+                          className="w-12 h-12 rounded-xl overflow-hidden flex-shrink-0"
+                          style={{ background: "#E6F1FB" }}
                         >
-                          {apt.user?.name?.charAt(0)}
+                          {doc?.profilePicture ? (
+                            <img
+                              src={doc.profilePicture}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div
+                              className="w-full h-full flex items-center justify-center font-bold"
+                              style={{ color: "#0C447C" }}
+                            >
+                              {doc?.user?.name?.charAt(0)}
+                            </div>
+                          )}
                         </div>
                         <div>
                           <p className="text-sm font-bold text-midnight">
-                            {apt.user?.name}
+                            {doc?.user?.name}
                           </p>
                           <p className="text-xs text-slate">
-                            {apt.user?.email}
+                            {doc?.specialization}
                           </p>
+                          <div className="flex items-center gap-1 mt-0.5">
+                            <MapPin size={11} className="text-slate" />
+                            <p className="text-xs text-slate">
+                              {doc?.user?.city}
+                            </p>
+                          </div>
                         </div>
                       </div>
                       <span
@@ -158,77 +174,44 @@ export default function Appointments() {
                       </span>
                     </div>
 
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-4">
+                    <div className="flex items-center gap-6 py-3 border-t border-b border-sky-light mb-4">
                       <div className="flex items-center gap-2">
-                        <Calendar
-                          size={14}
-                          className="text-slate flex-shrink-0"
-                        />
-                        <div>
-                          <p className="text-xs text-slate">Date</p>
-                          <p className="text-sm font-medium text-midnight">
-                            {new Date(
-                              apt.date + "T00:00:00",
-                            ).toLocaleDateString("en-PK", {
+                        <Calendar size={14} className="text-slate" />
+                        <p className="text-sm font-medium text-midnight">
+                          {new Date(apt.date + "T00:00:00").toLocaleDateString(
+                            "en-PK",
+                            {
+                              weekday: "short",
                               day: "numeric",
                               month: "short",
                               year: "numeric",
-                            })}
-                          </p>
-                        </div>
+                            },
+                          )}
+                        </p>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Clock size={14} className="text-slate flex-shrink-0" />
-                        <div>
-                          <p className="text-xs text-slate">Time</p>
-                          <p className="text-sm font-medium text-midnight">
-                            {apt.time}
-                          </p>
-                        </div>
+                        <Clock size={14} className="text-slate" />
+                        <p className="text-sm font-medium text-midnight">
+                          {apt.time}
+                        </p>
                       </div>
-                      {apt.reason && (
-                        <div className="flex items-center gap-2">
-                          <User
-                            size={14}
-                            className="text-slate flex-shrink-0"
-                          />
-                          <div>
-                            <p className="text-xs text-slate">Reason</p>
-                            <p className="text-sm font-medium text-midnight truncate">
-                              {apt.reason}
-                            </p>
-                          </div>
-                        </div>
-                      )}
                     </div>
 
+                    {apt.reason && (
+                      <p className="text-xs text-slate mb-4">
+                        Reason: {apt.reason}
+                      </p>
+                    )}
+
                     {apt.status === "pending" && (
-                      <div className="flex gap-2 mt-4 pt-4 border-t border-sky-light">
-                        <button
-                          onClick={() => handleStatus(apt._id, "confirmed")}
-                          className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold
-                                     text-white transition-all"
-                          style={{ background: "#1D9E75" }}
-                        >
-                          <CheckCircle size={13} /> Confirm
-                        </button>
-                        <button
-                          onClick={() => handleStatus(apt._id, "cancelled")}
-                          className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold
-                                     transition-all border"
-                          style={{ borderColor: "#E24B4A", color: "#A32D2D" }}
-                        >
-                          <XCircle size={13} /> Cancel
-                        </button>
-                        <button
-                          onClick={() => handleStatus(apt._id, "completed")}
-                          className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold
-                                     transition-all"
-                          style={{ background: "#E6F1FB", color: "#0C447C" }}
-                        >
-                          Mark completed
-                        </button>
-                      </div>
+                      <button
+                        onClick={() => handleCancel(apt._id)}
+                        className="flex items-center gap-1.5 text-xs font-semibold px-4 py-2 rounded-xl
+                                   border transition-all"
+                        style={{ borderColor: "#E24B4A", color: "#A32D2D" }}
+                      >
+                        <X size={13} /> Cancel appointment
+                      </button>
                     )}
                   </motion.div>
                 );

@@ -7,6 +7,7 @@ import {
   FileText,
   Bell,
   User,
+  Calendar,
 } from "lucide-react";
 import { useAuthStore } from "../../store/authStore";
 import Logo from "./Logo";
@@ -27,6 +28,7 @@ export default function UserSidebar({ active, open, setOpen }) {
     { to: `/user/${id}/prescription`, label: "Prescriptions", icon: FileText },
     { to: `/user/${id}/medicines`, label: "Medicines", icon: Bell },
     { to: `/user/${id}/profile`, label: "My Profile", icon: User },
+    { to: `/user/${id}/appointments`, label: "Appointments", icon: Calendar },
   ];
 
   const handleLogout = () => {

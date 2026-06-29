@@ -9,6 +9,7 @@ import doctorRoutes from "./routes/doctor.js";
 import userRoutes from "./routes/user.js";
 import adminRoutes from "./routes/admin.js";
 import chatRoutes from "./routes/chat.js";
+import appointmentRoutes from "./routes/appointment.js";
 
 dotenv.config();
 connectDB();
@@ -24,6 +25,7 @@ app.use("/api/doctor", doctorRoutes);
 app.use("/api/user", userRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/chat", chatRoutes);
+app.use("/api/appointments", appointmentRoutes);
 
 app.get("/api/health", (req, res) =>
   res.json({ status: "Medivox API running" }),
