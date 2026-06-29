@@ -18,6 +18,7 @@ import UserList from "./pages/admin/UserList";
 import ProtectedRoute from "./components/shared/ProtectedRoute";
 import UserProfile from "./pages/user/UserProfile";
 import MyAppointments from "./pages/user/MyAppointments";
+import NotFound from "./pages/NotFound";
 
 function SmartRedirect() {
   const { user, token } = useAuthStore();
@@ -153,7 +154,7 @@ export default function App() {
       <Route path="/medicines" element={<SmartRedirect />} />
 
       {/* 404 */}
-      <Route path="*" element={<Navigate to="/" />} />
+      <Route path="*" element={<NotFound />} />
     </Routes>
   );
 }
