@@ -133,7 +133,7 @@ export default function Login() {
         </div>
 
         <p className="text-white/40 text-xs">
-          2025 Medivox · AI Health Platform
+          2026 Medivox · AI Health Platform
         </p>
       </div>
 

@@ -41,7 +41,7 @@ export const sendDoctorApprovedEmail = async (doctorEmail, doctorName) => {
             </p>
           </div>
           <p style="text-align: center; color: #888780; font-size: 12px; margin-top: 20px;">
-            2025 Medivox · AI Health Platform
+            2026 Medivox · AI Health Platform
           </p>
         </div>
       `,
@@ -101,7 +101,7 @@ export const sendDoctorRejectedEmail = async (
             </div>
           </div>
           <p style="text-align: center; color: #888780; font-size: 12px; margin-top: 20px;">
-            2025 Medivox · AI Health Platform
+            2026 Medivox · AI Health Platform
           </p>
         </div>
       `,

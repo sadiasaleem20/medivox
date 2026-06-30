@@ -930,7 +930,7 @@ export default function Landing() {
           </div>
           <div className="border-t border-white/10 pt-6 flex flex-col md:flex-row justify-between items-center gap-3">
             <p className="text-sky-light/40 text-sm">
-              2025 Medivox. All rights reserved.
+              2026 Medivox. All rights reserved.
             </p>
             <p className="text-sky-light/40 text-sm">
               Built with care for better healthcare.
